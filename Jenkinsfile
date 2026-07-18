@@ -52,16 +52,10 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                withCredentials([sshUserPrivateKey(
-                    credentialsId: 'deploy-ec2-ssh-key',
-                    keyFileVariable: 'SSH_KEY',
-                    usernameVariable: 'SSH_USER'
-                )]) {
-                    sh '''
-                        scp -i "$SSH_KEY" -o StrictHostKeyChecking=no -r dist/* \
-                          "$SSH_USER"@16.16.120.110:/var/www/react-app/
-                    '''
-                }
+                sh '''
+            cp -r dist/* /var/www/react-app/
+            ls -la /var/www/react-app
+        '''
             }
         }
     }
