@@ -1,0 +1,69 @@
+pipeline {
+    agent any
+
+    tools {
+        nodejs 'Node 18'
+    }
+
+    environment {
+        CI = 'true'
+    }
+
+    options {
+        timestamps()
+        timeout(time: 20, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '15'))
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Install') {
+            steps {
+                sh 'node --version'
+                sh 'npm --version'
+                sh 'npm ci'
+            }
+        }
+
+        stage('Lint') {
+            steps {
+                sh 'npm run lint'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'npm test -- --watchAll=false --coverage --passWithNoTests'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'npm run build'
+            }
+        }
+
+        stage('Archive') {
+            steps {
+                archiveArtifacts artifacts: 'build/**', fingerprint: true
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'React app built and tested successfully.'
+        }
+        failure {
+            echo 'Pipeline failed — open Console Output for the first red stage.'
+        }
+        always {
+            cleanWs()
+        }
+    }
+}
